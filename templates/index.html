@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Belohnungssystem</title>
+</head>
+<body>
+    <h2>Sammel deine Coins!</h2>
+    <h3>Benutzer</h3>
+    <ul>
+        {% for user in users %}
+        <li>{{ user.name }} ({{ user.role }}): {{ user.coins }} Coins</li>
+        {% endfor %}
+    </ul>
+    
+    <h3>Neue Aktivität hinzufügen</h3>
+    <form action="{{ url_for('add_activity') }}" method="post">
+        Aktivität: <input type="text" name="activity">
+        Coins: <input type="number" name="coins">
+        <button type="submit">Hinzufügen</button>
+    </form>
+
+    <h3>Aktivität durchführen</h3>
+    <form action="{{ url_for('perform_activity') }}" method="post">
+        Benutzername: <input type="text" name="username">
+        Aktivität:
+        <select name="activity">
+            {% for activity in activities %}
+            <option value="{{ activity.name }}">{{ activity.name }}</option>
+            {% endfor %}
+        </select>
+        Prüfer:
+        <select name="approver">
+            {% for user in users %}
+            {% if user.role == "parent" %}
+            <option value="{{ user.name }}">{{ user.name }}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+        <button type="submit">Durchführen</button>
+    </form>
+
+    <h3>Transaktion bestätigen</h3>
+    <form id="transaction-form" action="{{ url_for('confirm_transaction') }}" method="post">
+        Prüfer: <input type="text" name="approver" required>
+        Transaktions-ID: 
+        <select name="transaction_id" id="transaction-id-select" required>
+            <option value="" disabled selected>Wählen Sie einen Timestamp</option>
+            <!-- Optionen werden von JavaScript dynamisch hinzugefügt -->
+        </select>
+        <button type="submit">Bestätigen</button>
+    </form>
+    
+    <div id="unconfirmed-transactions"></div>
+    
+    <script>
+        document.getElementById('transaction-form').addEventListener('submit', function(event) {
+            const selectElement = document.getElementById('transaction-id-select');
+            const selectedValue = selectElement.value;
+            console.log("Selected transaction ID on submit:", selectedValue);
+            if (selectElement.value === "") {
+                event.preventDefault();  // Prevent form submission
+                alert("Bitte wählen Sie eine Transaktion aus.");
+            }
+        });
+    
+        fetch('/unconfirmed_transactions')
+        .then(response => response.json())
+        .then(data => {
+            const transactionsDiv = document.getElementById('unconfirmed-transactions');
+            const transactionSelect = document.getElementById('transaction-id-select');
+            
+            if (data.length === 0) {
+                transactionsDiv.innerHTML = '<p>Keine offenen Transaktionen.</p>';
+            } else {
+                data.forEach(transaction => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = transaction.timestamp;  
+                    optionElement.innerText = transaction.timestamp;  // only display the timestamp in the dropdown
+                    transactionSelect.appendChild(optionElement);
+    
+                    const transactionElement = document.createElement('p');
+                    transactionElement.innerText = `Timestamp: ${transaction.timestamp}, User: ${transaction.user_name}, Activity: ${transaction.activity}, Coins: ${transaction.coins}, Approver: ${transaction.approver}`;
+                    transactionsDiv.appendChild(transactionElement);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching unconfirmed transactions:', error);
+        });
+    </script>
+    
+
+</body>
+</html>
+
+<!-- HTML und JavaScript:
+
+Das HTML-Formular (<form>) dient dazu, Benutzereingaben (Prüfer und Transaktions-ID) an den Server zu senden, wenn der Benutzer auf den "Bestätigen"-Button klickt.
+Das JavaScript verwendet fetch, um eine Anfrage an den Endpunkt /unconfirmed_transactions zu senden. Die Antwort (die ungeprüften Transaktionen) wird verarbeitet und im <div id="unconfirmed-transactions">-Element angezeigt.
+Python/Flask:
+
+Der Flask-Endpunkt /confirm_transaction verarbeitet POST-Anfragen, die vom HTML-Formular gesendet werden.
+Die Funktion confirm_transaction liest die Daten aus dem Formular (approver und transaction_id), bestätigt die Transaktion im Blockchain-System und leitet dann zur Hauptseite (index) weiter, wenn die Bestätigung erfolgreich war. -->

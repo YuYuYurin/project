@@ -1,0 +1,18 @@
+[
+    {
+        "name": "Geschirr spülen",
+        "coins": 5
+    },
+    {
+        "name": "Hausaufgaben machen",
+        "coins": 10
+    },
+    {
+        "name": "Kinderzimmer aufräumen",
+        "coins": 3
+    },
+    {
+        "name": "Zähne putzen",
+        "coins": 1
+    }
+]
