@@ -3,6 +3,7 @@ from blockchain import Blockchain
 from transaction import Transaction
 from user import User
 import json
+from flask import jsonify
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
@@ -40,22 +41,37 @@ def add_activity():
 def perform_activity():
     username = request.form['username']
     activity_name = request.form['activity']
+
     user = next((u for u in users if u.name == username), None)
     if not user:
-        return "User not found", 404
+        error = "der Benutzer wurde nicht gefunden"
+        return render_template('index.html', users=users, activities=activities, error=error)
     activity = next((act for act in activities if act['name'] == activity_name), None)
     if not activity:
-        return "Activity not found", 404
+        error = "Aktivität nicht gedfunden"
+        return render_template('index.html', users=users, activities=activities, error=error)
     
     coins = activity['coins']
-    parents = [u.name for u in users if u.role == "parent" and u.name != user.name]
-    if not parents:
-        return "No parents available to evaluate the activity", 400
     
-    approver = parents[0] if len(parents) == 1 else request.form['approver']
-    if len(parents) > 1:
+    parents = [u.name for u in users if u.role == "parent"]
+    logging.debug(f"Parents: {parents}, Username: {username}")
+
+    if not parents:
+        error = "Keine Eltern zur Evaluierung vorhanden"
+        return render_template('index.html', users=users, activities=activities, error=error)
+    
+    if len(parents) == 1:
+        approver = parents[0]
+        logging.debug(f"Single parent, approver: {approver}")
+    elif len(parents) > 1:
+        approver = request.form['approver']
+        logging.debug(f"Multiple parents, selected approver: {approver}")
         if approver == username:
-            return "approver has to be another person as user"
+            logging.debug("Error: der Prüfer muss eine andere Person als Benutzer sein")
+            return render_template('index.html', users=users, activities=activities, error="Error: der Prüfer soll eine andere Person als Benutzer sein")
+    else:
+        logging.debug("Unexpected error: No parents available")
+        return render_template('index.html', users=users, activities=activities, error="Unerwarteter Error") 
     
     new_transaction = Transaction(user.name, activity_name, coins, approver)
     blockchain.pending_transactions.append(new_transaction)

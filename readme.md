@@ -22,9 +22,13 @@ belohnungssystem/
 - eine private Blockchain wird verwendet, um die Nachverfolgbarkeit der Coins zu gewährleisten
 
 ## Änderungen
-- Implementierung der Webanwendung mit Flask
-- Anpassung der Logik, wann neuer Block erstellt wird.
+- Wenn es nur einen Elternteil gibt, wird dieser als approver gesetzt.
+- Wenn es mehr als einen Elternteil gibt, wird der approver aus dem Formular entnommen. Dabei wird überprüft, dass der approver nicht derselbe wie der Benutzer ist.
 
+## Todo
+- Probelm mit der falschen Darstellung der Umlaute auf der Seite http://127.0.0.1:5000/confirmed_transactions beheben
+
+## Memo (Nice to have)
 '''Zeitgesteuerte Blockerstellung
 Ein neuer Block wird in regelmäßigen Zeitintervallen erstellt, z.B. alle 24 Stunden, unabhängig davon, wie viele Transaktionen vorliegen.
 
