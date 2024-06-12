@@ -12,21 +12,21 @@ class Blockchain:
         self.chain = []
         self.current_transactions = []
         self.pending_transactions = []  # Liste für unbestätigte Transaktionen
-        self.create_block(previous_hash='1', proof=100)  # Genesis block
+        self.create_block(previous_hash='1')  # Genesis block
 
         with open('/home/yuri/Dokumente/Weiterbildung_2023/BlockChain/Projekt_02/user_data.json', 'r', encoding='utf-8') as file:
             self.users = json.load(file)
         
 
-    def create_block(self, proof, previous_hash=None):
+    def create_block(self, previous_hash=None):
         block = {
             'index': len(self.chain) + 1,
             'timestamp': time.time(),
             'transactions': [transaction.to_dict() for transaction in self.current_transactions],
-            'proof': proof,
             'previous_hash': previous_hash or self.hash(self.chain[-1]),
         }
         self.current_transactions = []
+        logging.debug(f"New block created: {block}")
         self.chain.append(block)
         return block
 
@@ -54,8 +54,11 @@ class Blockchain:
                     self.current_transactions.append(transaction) # bestätigte Transaktion in current_transactions hinzufügen
                     self.pending_transactions.remove(transaction) 
                     logging.debug(f"Transaction confirmed: {transaction.to_dict()}")
+                    if len(self.current_transactions) > 5:
+                        self.create_block() 
+                        logging.debug("create_block() is called in confirm_transaction().")   
                     return True
-        logging.debug("Transaction not found or not authorized")
+        logging.debug(f"Transaction not found or list 'current_transactions' < 5. Length of current_transactions: {len(self.current_transactions)}")
         return False
 
 

@@ -57,11 +57,9 @@
         <button type="submit">Bestätigen</button>
     </form>
     
-    <h4>offene Transaktionen</h4>
+    <h4>Offene Transaktionen</h4>
     <div id="unconfirmed-transactions"></div>
 
-    <h4>bestätigte Transaktionen</h4>
-    <div id="confirmed-transactions"></div>
     
     <script>
         document.getElementById('transaction-form').addEventListener('submit', function(event) {
@@ -99,24 +97,7 @@
             console.error('Fehler beim Abrufen der offenen Transaktionen:', error);
         });
 
-        fetch('/confirmed_transactions')
-        .then(response => response.json())
-        .then(data => {
-            const transactionsDiv = document.getElementById('confirmed-transactions');
-            
-            if (data.length === 0) {
-                transactionsDiv.innerHTML = '<p>Keine bestätigten Transaktionen.</p>';
-            } else {
-                data.forEach(transaction => {
-                    const transactionElement = document.createElement('p');
-                    transactionElement.innerText = `Timestamp: ${transaction.timestamp}, Benutzer: ${transaction.user_name}, Aktivität: ${transaction.activity}, Coins: ${transaction.coins}, Prüfer: ${transaction.approver}`;
-                    transactionsDiv.appendChild(transactionElement);
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Fehler beim Abrufen der bestätigten Transaktionen:', error);
-        });
+
     </script>
 
 

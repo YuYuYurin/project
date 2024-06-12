@@ -88,11 +88,26 @@ def unconfirmed_transactions():
     logging.debug(f"unconfirmed_transactions: {transactions}")
     return jsonify(transactions)
 
+
+"""
+- /confirmed_transactions: Diese Route leitet zur neuen Seite /confirmed_transactions_page weiter.
+- /api/confirmed_transactions: Diese Route liefert die bestätigten Transaktionen im JSON-Format.
+- /confirmed_transactions_page: Diese Route rendert das HTML-Template, das die bestätigten Transaktionen von der API abruft und anzeigt.
+
+"""
 @app.route('/confirmed_transactions')
 def confirmed_transactions():
+    return redirect(url_for('confirmed_transactions_page'))
+
+@app.route('/api/confirmed_transactions')
+def api_confirmed_transactions():
     transactions = blockchain.list_confirmed_transactions()
     logging.debug(f"confirmed_transactions: {transactions}")
     return jsonify(transactions)
+
+@app.route('/confirmed_transactions_page')
+def confirmed_transactions_page():
+    return render_template('confirmed_transactions.html')
 
 @app.route('/confirm_transaction', methods=['POST'])
 def confirm_transaction():

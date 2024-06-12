@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bestätigte Transaktionen</title>
+</head>
+<body>
+    <h4>Bestätigte Transaktionen</h4>
+    <div id="confirmed-transactions"></div>
+
+    <script>
+        fetch('/api/confirmed_transactions')
+            .then(response => response.json())
+            .then(data => {
+                const transactionsDiv = document.getElementById('confirmed-transactions');
+                data.forEach(transaction => {
+                    const transactionElement = document.createElement('p');
+                    transactionElement.textContent = `Activity: ${transaction.activity}, Approver: ${transaction.approver}, Coins: ${transaction.coins}, Confirmed: ${transaction.confirmed}, Timestamp: ${transaction.timestamp}, User: ${transaction.user_name}`;
+                    transactionsDiv.appendChild(transactionElement);
+                });
+            })
+            .catch(error => {
+                console.error('Fehler beim Abrufen der Transaktionen:', error);
+            });
+    </script>
+</body>
+</html>
