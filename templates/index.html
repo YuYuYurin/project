@@ -4,9 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Belohnungssystem</title>
+    <style>
+        body {
+            font-family: 'Consolas', monospace;
+            background-color: #d4edda; /* Pastellgrüne Hintergrundfarbe */
+            color: #333; /* Dunkle Textfarbe für Kontrast */
+            margin: 0;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+            color: #155724; /* Dunklerer Grünton für Überschriften */
+        }
+        h3 {
+            color: #1c7430;
+            border-bottom: 2px solid #155724; /* Linie unter den Überschriften */
+            padding-bottom: 5px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: #f8f9fa; /* Hellgraue Hintergrundfarbe für Listenelemente */
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+        }
+        form {
+            margin-bottom: 20px;
+            background-color: #f1f8e9; /* Leichte Pastellfarbe für Formulare */
+            padding: 15px;
+            border-radius: 5px;
+        }
+        input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 10px 0;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #28a745; /* Grüner Button */
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838; /* Dunklerer Grüner Ton beim Hover */
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .transaction-list {
+            background-color: #e2e3e5; /* Leichte Grau-Töne für Transaktionsliste */
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .transaction-list p {
+            margin: 5px 0;
+        }
+    </style>
 </head>
 <body>
     <h2>Sammel deine Coins!</h2>
+    
     <h3>Benutzer</h3>
     <ul>
         {% for user in users %}
@@ -27,13 +93,13 @@
         Aktivität:
         <select name="activity">
             {% for activity in activities %}
-            <option value="{{ activity.name }}">{{ activity.name }}</option>
+            <option value="{{activity['activity name']}}">{{ activity['activity name'] }}</option>
             {% endfor %}
         </select>
         Prüfer:
         <select name="approver">
             {% for user in users %}
-            {% if user.role == "parent" %}
+            {% if user.role == "PARENT" %}
             <option value="{{ user.name }}">{{ user.name }}</option>
             {% endif %}
             {% endfor %}
@@ -41,10 +107,9 @@
         <button type="submit">Durchführen</button>
     </form>
 
-        <!-- Fehleranzeige -->
-        {% if error %}
-        <div style="color: red;">{{ error }}</div>
-        {% endif %}
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
 
     <h3>Transaktion bestätigen</h3>
     <form id="transaction-form" action="{{ url_for('confirm_transaction') }}" method="post">
@@ -52,20 +117,17 @@
         Transaktions-ID: 
         <select name="transaction_id" id="transaction-id-select" required>
             <option value="" disabled selected>Wählen Sie einen Timestamp</option>
-            <!-- Optionen werden von JavaScript dynamisch hinzugefügt -->
         </select>
         <button type="submit">Bestätigen</button>
     </form>
     
     <h4>Offene Transaktionen</h4>
-    <div id="unconfirmed-transactions"></div>
+    <div id="unconfirmed-transactions" class="transaction-list"></div>
 
-    
     <script>
         document.getElementById('transaction-form').addEventListener('submit', function(event) {
             const selectElement = document.getElementById('transaction-id-select');
             const selectedValue = selectElement.value;
-            console.log("Selected transaction ID on submit:", selectedValue);
             if (selectElement.value === "") {
                 event.preventDefault();  // Prevent form submission
                 alert("Bitte wählen Sie eine Transaktion aus.");
@@ -84,7 +146,7 @@
                 data.forEach(transaction => {
                     const optionElement = document.createElement('option');
                     optionElement.value = transaction.timestamp;  
-                    optionElement.innerText = transaction.timestamp;  // only display the timestamp in the dropdown
+                    optionElement.innerText = transaction.timestamp;
                     transactionSelect.appendChild(optionElement);
     
                     const transactionElement = document.createElement('p');
@@ -96,19 +158,7 @@
         .catch(error => {
             console.error('Fehler beim Abrufen der offenen Transaktionen:', error);
         });
-
-
     </script>
-
-
 </body>
 </html>
 
-<!-- HTML und JavaScript:
-
-Das HTML-Formular (<form>) dient dazu, Benutzereingaben (Prüfer und Transaktions-ID) an den Server zu senden, wenn der Benutzer auf den "Bestätigen"-Button klickt.
-Das JavaScript verwendet fetch, um eine Anfrage an den Endpunkt /unconfirmed_transactions zu senden. Die Antwort (die ungeprüften Transaktionen) wird verarbeitet und im <div id="unconfirmed-transactions">-Element angezeigt.
-Python/Flask:
-
-Der Flask-Endpunkt /confirm_transaction verarbeitet POST-Anfragen, die vom HTML-Formular gesendet werden.
-Die Funktion confirm_transaction liest die Daten aus dem Formular (approver und transaction_id), bestätigt die Transaktion im Blockchain-System und leitet dann zur Hauptseite (index) weiter, wenn die Bestätigung erfolgreich war. -->

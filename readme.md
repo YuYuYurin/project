@@ -13,6 +13,7 @@ belohnungssystem/
 │   └── styles.css
 ├── user.py
 ├── transaction.py
+├── readme.md
 ├── activities.json
 └── user_data.json
 

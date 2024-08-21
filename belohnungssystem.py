@@ -2,22 +2,24 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 from blockchain import Blockchain
 from transaction import Transaction
 from user import User
-import json
 from flask import jsonify
 import logging
+from datenbank import Datenbank
 
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 blockchain = Blockchain()
+db = Datenbank('/home/yuri/Dokumente/Weiterbildung_2023/SQLite.db')
 
-with open('/home/yuri/Dokumente/Weiterbildung_2023/BlockChain/Projekt_04/user_data.json', 'r', encoding='utf-8') as file:
-    user_data = json.load(file)
+# Laden der Benutzer und Aktivitäten aus der Datenbank
+users = [User(user[1], user[2], user[3]) for user in db.fetch_users()]
+logging.debug(f"users: {users}")
 
-with open('/home/yuri/Dokumente/Weiterbildung_2023/BlockChain/Projekt_04/activities.json', 'r', encoding='utf-8') as file:
-    activities = json.load(file)
+activities = [{"activity name": act[1], "coins": act[2]} for act in db.fetch_activities()]
+logging.debug(f"activities: {activities}")
 
-users = [User(user['name'], user['role'], user.get('coins', 0)) for user in user_data]
+
 
 @app.route('/')
 def index():
@@ -31,10 +33,7 @@ def index():
 def add_activity():
     new_activity = request.form['activity']
     coins = int(request.form['coins'])
-    activities.append({"name": new_activity, "coins": coins})
-    with open('activities.json', 'w', encoding='utf-8') as file:
-        json.dump(activities, file, ensure_ascii=False, indent=4)
-        logging.debug(f"new activity is added: {activities}")
+    db.insert_activity(new_activity, coins)  # In Datenbank einfügen
     return redirect(url_for('index'))
 
 @app.route('/perform_activity', methods=['POST'])
@@ -46,14 +45,15 @@ def perform_activity():
     if not user:
         error = "der Benutzer wurde nicht gefunden"
         return render_template('index.html', users=users, activities=activities, error=error)
-    activity = next((act for act in activities if act['name'] == activity_name), None)
+    
+    activity = next((act for act in activities if act['activity name'] == activity_name), None)
     if not activity:
         error = "Aktivität nicht gedfunden"
         return render_template('index.html', users=users, activities=activities, error=error)
     
     coins = activity['coins']
     
-    parents = [u.name for u in users if u.role == "parent"]
+    parents = [u.name for u in users if u.role == "PARENT"]
     logging.debug(f"Parents: {parents}, Username: {username}")
 
     if not parents:
@@ -75,10 +75,18 @@ def perform_activity():
     
     new_transaction = Transaction(user.name, activity_name, coins, approver)
     blockchain.pending_transactions.append(new_transaction)
-    logging.debug(f"pending_transactions: {blockchain.pending_transactions}")
+    logging.debug(f"blockchain.pending_transactions: {blockchain.pending_transactions}")
+    user_id = db.get_user_id_by_name_pending_transactions(user.name)
+    activity_id = db.get_activity_id_by_name_pending_transactions(activity_name)
+    db.insert_pending_transaction(user_id, activity_id, coins, approver,new_transaction.timestamp)
+    logging.debug(f"new_pending_transaction added in db")
 
-    user.add_activity(activity_name, coins)
-    logging.debug(f"activity is added in perform_activity(). User: {user}")
+    # User bekommt die Belohnungspunkte
+    user.add_coins(activity_name, coins)
+    logging.debug(f"coins is added to the user: {user}")
+    db.update_usercoins(user_id, user.coins)
+    logging.debug(f"coins of {user} in db user is updated")
+    
     return redirect(url_for('index'))
 
 
@@ -125,6 +133,13 @@ def confirm_transaction():
         return "Invalid transaction ID format", 400
 
     if blockchain.confirm_transaction(transaction_id, approver_name):
+        user_id = db.get_user_id_by_transaction_id(transaction_id)
+        activity_id = db.get_activity_id_by_transaction_id(transaction_id)
+        coins = db.get_coins_by_transaction_id(transaction_id)
+        db.insert_history(user_id, activity_id, coins, approver_name)
+        logging.debug(f"new confirmed transaction is added in the db history")
+        db.delete_pending_transaction(transaction_id)
+        logging.debug(f"this transaction is deleted from the db pending_transactions")
         return redirect(url_for('confirmed_transactions'))
     return "Transaction not found or not authorized", 400
 

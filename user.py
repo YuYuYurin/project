@@ -6,10 +6,10 @@ class User:
         self.activities = []
 
 
-    def add_coins(self, amount):
-        self.coins += amount
+   #def add_coins(self, amount):
+   #     self.coins += amount
 
-    def add_activity(self, activity_name, coins):
+    def add_coins(self, activity_name, coins):
         self.activities.append((activity_name, coins))
         self.coins += coins
 
@@ -28,6 +28,5 @@ class User:
             'coins': self.coins,
             'activities': self.activities
         }
-    
     def __repr__(self):
-        return f"User(name={self.name}, coins={self.coins})"
+        return f"User(name={self.name}, role={self.role}, coins={self.coins})"
