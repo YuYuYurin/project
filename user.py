@@ -6,12 +6,9 @@ class User:
         self.activities = []
 
 
-   #def add_coins(self, amount):
-   #     self.coins += amount
+    def add_coins(self, amount):
+        self.coins += amount
 
-    def add_coins(self, activity_name, coins):
-        self.activities.append((activity_name, coins))
-        self.coins += coins
 
     def show_coins(self):
         print(f"{self.name} hat {self.coins} Coins.")

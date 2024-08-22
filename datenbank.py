@@ -37,7 +37,7 @@ class Datenbank:
                 CREATE TABLE IF NOT EXISTS activity (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     activity_name TEXT NOT NULL,
-                    points INTEGER NOT NULL
+                    points INTEGER NOT NULL DEFAULT 1
                 )
             ''')
 
@@ -55,21 +55,20 @@ class Datenbank:
                 )
             ''')
 
-
-
             # Tabelle "history"
             self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS history (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER,
                     activity_id INTEGER,
-                    points INTEGER,
                     approver TEXT,
-                    transaction_id INTEGER,
+                    points INTEGER,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,            
                     FOREIGN KEY(user_id) REFERENCES user(id) ON UPDATE CASCADE,
                     FOREIGN KEY(activity_id) REFERENCES activity(id) ON UPDATE CASCADE
                 )
             ''')
+
             self.conn.commit()
             print("Tabellen erfolgreich erstellt.")
         except sqlite3.Error as e:
@@ -191,6 +190,17 @@ class Datenbank:
         self.cursor.execute("SELECT points FROM pending_transactions WHERE transaction_id = ?", (transaction_id,))
         result = self.cursor.fetchone()
         return result[0] if result else None
+    
+    def get_user_name_by_transaction_id(self, transaction_id):
+        self.cursor.execute('''
+            SELECT u.username
+            FROM pending_transactions pt
+            JOIN user u ON u.id = pt.user_id
+            WHERE pt.transaction_id = ?
+        ''', (transaction_id,))
+        result = self.cursor.fetchone()
+        return result[0] if result else None
+
     
     def update_usercoins(self, user_id, coins):
         self.cursor.execute("UPDATE user SET current_points = ? WHERE id = ?", (coins, user_id))

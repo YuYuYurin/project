@@ -12,10 +12,9 @@ belohnungssystem/
 ├── static/ css
 │   └── styles.css
 ├── user.py
-├── transaction.py
+├── Databank
 ├── readme.md
-├── activities.json
-└── user_data.json
+└── transaction.py
 
 
 ## Ideen
@@ -24,12 +23,10 @@ belohnungssystem/
 - eine private Blockchain wird verwendet, um die Nachverfolgbarkeit der Coins zu gewährleisten
 
 ## Änderungen
-- Wenn es nur einen Elternteil gibt, wird dieser als approver gesetzt.
-- Wenn es mehr als einen Elternteil gibt, wird der approver aus dem Formular entnommen. Dabei wird überprüft, dass der approver nicht derselbe wie der Benutzer ist.
+- Datenbank Klasse wird implementiert
 
-- confirmed_transactions.html wurde hinzugefügt 
-- Probelm mit der falschen Darstellung der Umlaute auf der Seite http://127.0.0.1:5000/confirmed_transactions wurde behoben 
+## TODO
+- Extra HTML-Seite erstellen, sodass User hinzugefügt werden kann, wenn die Tabelle user leer ist.
 
-- proof-Wert in Blockchain wurde entfernt, da PoA als Konsensalgorithmus gewählt wurde
-- Neuer Block wird erstellt, wenn die bestätigten Transaktionen > 5 wird
+
 

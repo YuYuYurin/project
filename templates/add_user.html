@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuen Benutzer hinzufügen</title>
+    <style>
+        body {
+            font-family: Consolas, monospace;
+            background-color: #e0f2f1; /* Helles Pastellgrün */
+            color: #004d40; /* Dunkles Grün für den Text */
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h2, h3 {
+            color: #004d40;
+        }
+        input[type="text"], select {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: 1px solid #004d40;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #004d40;
+            color: #ffffff;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #00332d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Neuen Benutzer hinzufügen</h2>
+        <form action="{{ url_for('add_user') }}" method="post">
+            <label for="name">Benutzername:</label>
+            <input type="text" id="name" name="name" required>
+            
+            <label for="role">Rolle:</label>
+            <select id="role" name="role" required>
+                <option value="PARENT">Elternteil</option>
+                <option value="CHILD">Kind</option>
+            </select>
+            
+            <button type="submit">Hinzufügen</button>
+        </form>
+        
+        <h3>Aktuelle Benutzer</h3>
+        {% if not users %}
+            <p>Es sind keine Benutzer vorhanden. Bitte fügen Sie einen neuen Benutzer hinzu.</p>
+        {% else %}
+            <ul>
+                {% for user in users %}
+                <li>{{ user[1] }} ({{ user[2] }}): {{ user[3] }} Coins</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        
+        <a href="{{ url_for('index') }}">
+            <button>Zur Hauptseite zurückkehren</button>
+        </a>
+    </div>
+</body>
+</html>
+

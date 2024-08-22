@@ -19,10 +19,29 @@ logging.debug(f"users: {users}")
 activities = [{"activity name": act[1], "coins": act[2]} for act in db.fetch_activities()]
 logging.debug(f"activities: {activities}")
 
+@app.route('/add_user', methods=['GET','POST'])
+def add_user():
+    if request.method == 'POST':
+        new_user_name = request.form['name']
+        role = request.form['role']
+        db.insert_user(new_user_name, role)  # In Datenbank einfügen
+        logging.debug(f"new_user: {new_user_name}, role: {role} is added in the db")
+        return redirect(url_for('add_user'))
+
+    # GET-Anfrage: Benutzer anzeigen
+    users = db.fetch_users()  # Alle Benutzer abfragen
+
+    if not users:  # Wenn die Benutzerliste leer ist
+        logging.debug("No users found in the database")
+        return render_template('add_user.html', users=[], message="Noch keine Benutzer vorhanden. Fügen Sie einen neuen Benutzer hinzu.")
+    return render_template('add_user.html', users=users)
+
 
 
 @app.route('/')
 def index():
+    # Laden erneut der Benutzer aus der Datenbank, da ein neuer User hinzugefügt werden kann
+    users = [User(user[1], user[2], user[3]) for user in db.fetch_users()]
     return render_template('index.html', users=users, activities=activities) 
     # render_template() wird in Flask wird verwendet, um HTML-Vorlagen zu rendern und 
     # dynamisch Inhalte in diese Vorlagen einzufügen.
@@ -81,11 +100,7 @@ def perform_activity():
     db.insert_pending_transaction(user_id, activity_id, coins, approver,new_transaction.timestamp)
     logging.debug(f"new_pending_transaction added in db")
 
-    # User bekommt die Belohnungspunkte
-    user.add_coins(activity_name, coins)
-    logging.debug(f"coins is added to the user: {user}")
-    db.update_usercoins(user_id, user.coins)
-    logging.debug(f"coins of {user} in db user is updated")
+
     
     return redirect(url_for('index'))
 
@@ -103,9 +118,6 @@ def unconfirmed_transactions():
 - /confirmed_transactions_page: Diese Route rendert das HTML-Template, das die bestätigten Transaktionen von der API abruft und anzeigt.
 
 """
-@app.route('/confirmed_transactions')
-def confirmed_transactions():
-    return redirect(url_for('confirmed_transactions_page'))
 
 @app.route('/api/confirmed_transactions')
 def api_confirmed_transactions():
@@ -113,8 +125,8 @@ def api_confirmed_transactions():
     logging.debug(f"confirmed_transactions: {transactions}")
     return jsonify(transactions)
 
-@app.route('/confirmed_transactions_page')
-def confirmed_transactions_page():
+@app.route('/confirmed_transactions')
+def confirmed_transactions():
     return render_template('confirmed_transactions.html')
 
 @app.route('/confirm_transaction', methods=['POST'])
@@ -139,8 +151,22 @@ def confirm_transaction():
         db.insert_history(user_id, activity_id, coins, approver_name)
         logging.debug(f"new confirmed transaction is added in the db history")
         db.delete_pending_transaction(transaction_id)
-        logging.debug(f"this transaction is deleted from the db pending_transactions")
+        logging.debug(f"this transaction with {transaction_id} is deleted from the db pending_transactions")
+
+        # User bekommt die Belohnungspunkte
+        user_name = db.get_user_name_by_transaction_id(transaction_id)
+        user = next((u for u in users if u.name == user_name), None)
+        if user:
+            user.add_coins(coins)
+            logging.debug(f"coins is added to the user: {user.name} has currently {user.coins} coins")
+            db.update_usercoins(user_id, user.coins)
+            logging.debug(f"coins of {user} in db user is updated")
+
+        else:
+                logging.error(f"User with name {user_name} not found")
+
         return redirect(url_for('confirmed_transactions'))
+    
     return "Transaction not found or not authorized", 400
 
 
