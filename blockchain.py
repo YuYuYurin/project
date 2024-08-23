@@ -1,9 +1,12 @@
 import json
 import hashlib
 import time
-from user import User
 from transaction import Transaction
 import logging
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -13,9 +16,7 @@ class Blockchain:
         self.current_transactions = []
         self.pending_transactions = []  # Liste für unbestätigte Transaktionen
         self.create_block(previous_hash='1')  # Genesis block
-
-        with open('/home/yuri/Dokumente/Weiterbildung_2023/BlockChain/Projekt_02/user_data.json', 'r', encoding='utf-8') as file:
-            self.users = json.load(file)
+    
         
 
     def create_block(self, previous_hash=None):

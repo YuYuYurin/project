@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 from blockchain import Blockchain
 from transaction import Transaction
 from user import User
-from flask import jsonify
 import logging
 from datenbank import Datenbank
 
@@ -10,14 +9,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
 blockchain = Blockchain()
-db = Datenbank('/home/yuri/Dokumente/Weiterbildung_2023/SQLite.db')
+db = Datenbank("/home/yuri/Dokumente/Weiterbildung_2023/SQLite.db", "/home/yuri/Dokumente/Weiterbildung_2023/BlockChain/Projekt_04/create_tables_for_belohnungssystem.sql")
 
-# Laden der Benutzer und Aktivitäten aus der Datenbank
-users = [User(user[1], user[2], user[3]) for user in db.fetch_users()]
-logging.debug(f"users: {users}")
-
-activities = [{"activity name": act[1], "coins": act[2]} for act in db.fetch_activities()]
-logging.debug(f"activities: {activities}")
 
 @app.route('/add_user', methods=['GET','POST'])
 def add_user():
@@ -40,8 +33,15 @@ def add_user():
 
 @app.route('/')
 def index():
-    # Laden erneut der Benutzer aus der Datenbank, da ein neuer User hinzugefügt werden kann
+    # Laden erneut der Benutzer aus der Datenbank, da neue Users hinzugefügt werden kann
     users = [User(user[1], user[2], user[3]) for user in db.fetch_users()]
+    if not users:  # Überprüfen, ob die Benutzerliste leer ist
+        logging.debug("No users found, redirecting to /add_user")
+        return redirect(url_for('add_user'))
+
+    activities = [{"activity name": act[1], "coins": act[2]} for act in db.fetch_activities()]
+    logging.debug(f"activities: {activities}")
+
     return render_template('index.html', users=users, activities=activities) 
     # render_template() wird in Flask wird verwendet, um HTML-Vorlagen zu rendern und 
     # dynamisch Inhalte in diese Vorlagen einzufügen.
@@ -60,6 +60,8 @@ def perform_activity():
     username = request.form['username']
     activity_name = request.form['activity']
 
+    users = [User(user[1], user[2], user[3]) for user in db.fetch_users()]
+    activities = [{"activity name": act[1], "coins": act[2]} for act in db.fetch_activities()]
     user = next((u for u in users if u.name == username), None)
     if not user:
         error = "der Benutzer wurde nicht gefunden"
@@ -155,6 +157,7 @@ def confirm_transaction():
 
         # User bekommt die Belohnungspunkte
         user_name = db.get_user_name_by_transaction_id(transaction_id)
+        users = [User(user[1], user[2], user[3]) for user in db.fetch_users()]
         user = next((u for u in users if u.name == user_name), None)
         if user:
             user.add_coins(coins)
